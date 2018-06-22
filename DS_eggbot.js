@@ -716,12 +716,8 @@ client.on('message', message => {
                 return message.reply('Please be in a voice channel first!');
             }
             var countMembers = Array.from(voiceChannel.members.values()).length - 1; // subtract one to remove bot from vote
-            // if the queue doesn't exist
-            if (!songQue[workingQue]) {
-                return message.reply("Nothing is playing!");
-            }
-            // if there is nothing in the que
-            if (!songQue[workingQue][0]) {
+            // if the queue doesn't exist or queue is empty
+            if (!songQue[workingQue] || !songQue[workingQue][0]) {
                 return message.reply("Nothing is playing!");
             }
             if (!songQue[workingQue][0].checkVoted(message.author.id)) {
