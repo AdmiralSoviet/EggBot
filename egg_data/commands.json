@@ -1,0 +1,107 @@
+{
+    "help": {
+        "name": "!eg_help",
+        "section": "general",
+        "description": "Prints this list!"
+    },
+    "permission": {
+        "name": "!eg_permission",
+        "section": "general",
+        "description": "Check if you have permission to use moderator functions."
+    },
+    "say": {
+        "name": "!eg_say <argument>",
+        "section": "general",
+        "description": "Have the bot echo what is specified. (Mod Function)"
+    },
+    "stats": {
+        "name": "!eg_stats",
+        "section": "general",
+        "description": "Check how many servers Egg-Bot is running on."
+    },
+    "roll": {
+        "name": "!eg_roll <2d10>",
+        "section": "general",
+        "description": "Rolls a certain amount of dice a form commonly used in D&D! For example, rolling two 10 sided dice would be '2d10'."
+    },
+    "invite": {
+        "name": "!eg_invite",
+        "section": "general",
+        "description": "Generate an invite link for the current bot."
+    },
+    "wikihow": {
+        "name": "!eg_wikihow",
+        "section": "general",
+        "description": "Returns a random image from Wikihow via the web game 'damn.dog'."
+    },
+    "askme": {
+        "name": "!eg_askme",
+        "section": "general",
+        "description": "Asks a question sourced from questions others have asked me (Beware of any offensive content!)"
+    },
+    "mute": {
+        "name": "!eg_mute <@user>",
+        "section": "administration",
+        "description": "Stops a user from sending messages to the channel, use !eg_unmute to reverse this. (Mod Function)"
+    },
+    "unmute": {
+        "name": "!eg_unmute <@user>",
+        "section": "administration",
+        "description": "Allows a user to send messages to the current channel. (Mod Function)"
+    },
+    "kick": {
+        "name": "!eg_kick <@user> <reason>",
+        "section": "administration",
+        "description": "Kick a member from the server if you're a moderator. (Only kicks members below the bot in rank)"
+    },
+    "ban": {
+        "name": "!eg_ban <@user> <reason> <days worth of messages to delete>",
+        "section": "administration",
+        "description": "Ban a member from the server if you're a moderator. (Only bans members below the bot in rank)"
+    },
+    "prune": {
+        "name": "!eg_prune <number>",
+        "section": "administration",
+        "description": "Delete the specified amount of messages. Must be 100 or less. (Mod Function)"
+    },
+    "getlog": {
+        "name": "!eg_getlog",
+        "section": "administration",
+        "description": "Get EggBot's logs for the guild via DM. (Mod Function)"
+    },
+    "addsong": {
+        "name": "!eg_addsong <search term or link>",
+        "section": "music",
+        "description": "Adds the requested item to the song queue and plays it if the queue is already empty."
+    },
+    "random": {
+        "name": "!eg_random <search term>",
+        "section": "music",
+        "description": "Kind of like the !eg_addsong command but picks a random result when searching for the item instead of the top result."
+    },
+    "forcestop": {
+        "name": "!eg_clear",
+        "section": "music",
+        "description": "Stops the currently playing broadcast and clears the queue. (Mod Function)"
+    },
+    "forceskip": {
+        "name": "!eg_forceskip",
+        "section": "music",
+        "description": "Skips the current song in the queue and plays the next one. (Mod Function)"
+    },
+    "voteskip": {
+        "name": "!eg_voteskip",
+        "section": "music",
+        "description": "Vote to skip the current song. 60% of the vote needed to win and skip the song."
+    },
+    "forceplay": {
+        "name": "!eg_forceplay",
+        "section": "music",
+        "description": "Force bot to play from the top of the queue. (For debug reasons) (Mod Function)"
+    },
+    "que": {
+        "name": "!eg_queue",
+        "section": "music",
+        "description": "Command to list all songs in the current song queue."
+    }
+}

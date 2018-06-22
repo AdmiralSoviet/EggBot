@@ -1,0 +1,40 @@
+<html>
+    <head>
+        <title>EggLog&trade;</title>
+        <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
+        <style>
+            html, body{
+                background: black;
+                color: purple;
+                font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            }
+            p{
+                margin: 0px;
+            }
+            #live-count{
+                position: fixed;
+                bottom: 10;
+                right: 20;
+            }
+        </style>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script>
+            var socket = io();
+            socket.on('egglog-entry', function(msg){
+                $('#log').append($('<p>').text(msg));
+            });
+            socket.on('viewer-count', function(msg){
+                $('.count').html(msg);
+            });
+        </script>
+    </head>
+    <body>
+        <div id="log">
+
+        </div>
+        <div id='live-count'>
+            <span><span class="count">0</span> Viewers</span>
+        </div>
+    </body>
+</html>

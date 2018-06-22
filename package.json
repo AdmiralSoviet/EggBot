@@ -1,0 +1,21 @@
+{
+  "name": "eggbot",
+  "version": "1.0.0",
+  "description": "General purpose discord bot.",
+  "main": "DS_eggbot.js",
+  "dependencies": {
+    "discord.js": "latest",
+    "express": "latest",
+    "ffmpeg-binaries": "latest",
+    "opusscript": "latest",
+    "socket.io": "latest",
+    "youtube-search": "latest",
+    "ytdl-core": "latest"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
