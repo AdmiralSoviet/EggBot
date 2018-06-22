@@ -212,10 +212,10 @@ function addToQue(song, message) {
     var server = message.guild;
     // define the server's music que
     var workingQue = "eg_" + server.id;
-    // make sure the que exists in songue.json
+    // make sure the queue exists in songue.json
     if (songQue[workingQue]) {
-        // make sure que doesn't have too many items for the !eg_que command
-        if (songQue[workingQue].length <= 5) {
+        // make sure que doesn't have too many items for the !eg_queue command
+        if (songQue[workingQue].length < 15) {
             songQue[workingQue].push(song); // add the song to the que
             json = JSON.stringify(songQue); //convert it back to json
             fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
@@ -417,7 +417,7 @@ client.on('message', message => {
                         helplist[commands[property].section].setTitle("List of " + Grammer(commands[property].section) + " Commands");
                         helplist[commands[property].section].setColor("RANDOM");
                         helplist[commands[property].section].setThumbnail(client.user.avatarURL);
-                        helplist[commands[property].section].setFooter("Requested " + helplist[commands[property].section].setTimestamp().timestamp);
+                        helplist[commands[property].section].setTimestamp();
                     }
                     helplist[commands[property].section].addField(commands[property].name, commands[property].description);
                 }
@@ -448,7 +448,7 @@ client.on('message', message => {
             embed.addField("Uptime: ", ((client.uptime / 1000) / 60).toFixed(2) + " minute(s)");
             embed.addField("Free System Memory (mb): ", (os.freemem() / 1000000).toFixed(2) + "/" + (os.totalmem() / 1000000).toFixed(2) + " (" + ((os.freemem() / os.totalmem()) * 100).toFixed(2) + "%)");
             embed.addField("Servers Running: ", client.guilds.array().length);
-            embed.setFooter("Requested: " + embed.setTimestamp().timestamp);
+            embed.setTimestamp();
             eggLog("User '" + message.author.username + "' has requested stats.", message.guild);
             message.channel.send(embed);
         }
@@ -680,17 +680,20 @@ client.on('message', message => {
         if (secarg[0] == "!eg_queue") {
             // make sure this isn't a DM
             if (!message.guild || !message.member) {
-                return message.channel.send("This command must be sent in a server!");
+                return message.channel.send("This command must be sent in a guild!");
             }
             if (!queIsEmpty(message)) {
                 var workingQue = "eg_" + message.guild.id;
-                var text = "```\n---------------------------------------------------\n";
+                var embed = new Discord.RichEmbed();
+                embed.setTitle("Song Queue 🎺");
+                embed.setColor("PURPLE");
+                embed.setThumbnail(client.user.avatarURL);
+                embed.setDescription("This is the current song queue for this guild.");
                 for (var i = 0; i < songQue[workingQue].length; i++) {
-                    text += i + 1 + "\nURL: " + songQue[workingQue][i].link;
-                    text += "\nTITLE: " + songQue[workingQue][i].title + "\n---------------------------------------------------\n";
+                    embed.addField((i + 1) + ". " + songQue[workingQue][i].title, songQue[workingQue][i].link);
                 }
-                text += "```";
-                message.channel.send("The current queue is:\n" + text);
+                embed.setTimestamp();
+                message.channel.send(embed);
             } else {
                 message.channel.send("There are no items in the queue right now, try adding some!");
             }
@@ -847,7 +850,7 @@ client.on('message', message => {
                         embed.addField("Owner ID:", s_server.ownerID, true);
                         embed.addField("Region:", s_server.region);
                         embed.addField("Members:", s_server.memberCount);
-                        embed.setFooter("Requested: " + embed.setTimestamp().timestamp);
+                        embed.setTimestamp();
                         message.channel.send(embed)
                             .then(message => message.delete(client.guilds.array().length * 20000)); // wait 20 seconds per server (Should be enough to read each individual server tile)
                     }
