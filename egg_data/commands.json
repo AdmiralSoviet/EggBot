@@ -19,6 +19,11 @@
         "section": "general",
         "description": "Check how many servers Egg-Bot is running on."
     },
+    "info": {
+        "name": "!eg_info",
+        "section": "general",
+        "description": "Print a list of information about Egg-Bot, including ways to contribute to Egg-Bot's development."
+    },
     "roll": {
         "name": "!eg_roll <2d10>",
         "section": "general",
