@@ -438,6 +438,19 @@ client.on('message', message => {
             message.delete();
             message.channel.send(contentsaid);
         }
+        if (secarg[0] == "!eg_info") {
+            var embed = new Discord.RichEmbed();
+            embed.setColor("PURPLE");
+            embed.setURL("https://discord.gg/yyBm7qb");
+            embed.setThumbnail(client.user.avatarURL);
+            embed.setTitle(client.user.username + " Information");
+            embed.setDescription(`EggBot is a simple but diverse Discord Bot written in Node, built to run across multiple servers. If you like this bot, you can support further development of this bot by joining the community and recommending this bot to others.`);
+            embed.addField("Offical Discord :eggplant:", "https://discord.gg/yyBm7qb", true);
+            embed.addField("Source Code :computer:", "https://github.com/AdmiralSoviet/EggBot", true);
+            embed.addField("Disclaimer :warning:", "Please be aware that this bot logs guild activity (for development purposes only). If you want a copy of this guild's log-file, you can request it using the !eg_getlog command. (Mod Only)");
+            embed.setTimestamp();
+            message.channel.send(embed);
+        }
 
         // ask how many servers egg-bot is running on
         if (message.content === '!eg_stats') {
@@ -856,6 +869,7 @@ client.on('message', message => {
         }
         if (secarg[0] == "!eg_getlogall" && devOnlyPermission(message.author)) {
             var path = "egglog.log";
+            message.delete();
             if (secarg[1]) {
                 var srvr = client.guilds.get(secarg[1]);
                 if (srvr) {
