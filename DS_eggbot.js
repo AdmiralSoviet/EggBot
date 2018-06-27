@@ -248,7 +248,7 @@ function queIsEmpty(message) {
         }
     } else {
         // if songque doesn't exist, create it
-        eggLog("Creating queue array!", message.guild)
+        eggLog("[MUSIC] Creating queue array!", message.guild)
         songQue[workingQue] = [];
         json = JSON.stringify(songQue); //convert it back to json
         fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
@@ -286,7 +286,7 @@ function egPlay(voiceChannel, egSong, message) {
                     // make sure the song that 'ended' hasn't been skipped
                     for (var i = 0; i < skipped.length; i++) {
                         if (skipped[i] == egSong.link + message.guild.id) {
-                            eggLog("Tried to play next song but the current one is still playing!");
+                            eggLog("[MUSIC] Tried to play next song but the current one is still playing!");
                             skipped.splice(i, 1);
                             return
                         }
@@ -312,7 +312,7 @@ function stoppedPlaying(voiceChannel, message) {
             eggLog("[MUSIC] Playing next song in queue...", message.guild)
             egPlay(voiceChannel, songQue[workingQue][0], message);
         } else {
-            eggLog("Finished playing all songs in the queue!", message.guild);
+            eggLog("[MUSIC] Finished playing all songs in the queue!", message.guild);
             message.channel.send("Finished playing all songs in the queue.")
             voiceChannel.leave();
         }
@@ -766,7 +766,7 @@ client.on('message', message => {
             var workingQue = "eg_" + message.guild.id;
             if (songQue[workingQue]) {
                 if (songQue[workingQue].length != 0) {
-                    eggLog("Forcing song.", message.guild)
+                    eggLog("[MUSIC] Forcing song.", message.guild)
                     egPlay(voiceChannel, songQue[workingQue][0], message);
                 }
             } else {
@@ -786,7 +786,7 @@ client.on('message', message => {
                 return message.reply('Please be in a voice channel first!');
             }
             message.channel.send("Stopping stream...");
-            eggLog("Leaving channel.", message.guild)
+            eggLog("[MUSIC] Leaving channel.", message.guild)
             voiceChannel.leave();
             if (queIsEmpty(message) == false) {
                 addToBlacklist(songQue[workingQue][0].link, message);
@@ -894,14 +894,14 @@ client.on('message', message => {
 });
 
 function egMute(user, channel) {
-    eggLog("Muting " + user.username);
+    eggLog("[MOD] Muting " + user.username);
     return channel.overwritePermissions(user, {
         SEND_MESSAGES: false,
     });
 }
 
 function egUnMute(user, channel) {
-    eggLog("Unmuting " + user.username);
+    eggLog("[MOD] Unmuting " + user.username);
     return channel.overwritePermissions(user, {
         SEND_MESSAGES: true,
     });
