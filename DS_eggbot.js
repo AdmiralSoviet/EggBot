@@ -285,7 +285,6 @@ function egPlay(voiceChannel, egSong, message) {
             broadcast.on('end', () => {
                 setTimeout(function () {
                     // make sure the song that 'ended' hasn't been skipped
-                    eggLog(skipped);
                     for (var i = 0; i < skipped.length; i++) {
                         if (skipped[i] == egSong.link + message.guild.id) {
                             eggLog("Tried to play next song but the current one is still playing!");
@@ -736,8 +735,7 @@ client.on('message', message => {
             if (!songQue[workingQue][0].checkVoted(message.author.id)) {
                 var requiredVote = Math.round(countMembers * 0.6); // 60% of vote required
                 songQue[workingQue][0].skipCount += 1;
-                eggLog("REQUIRED: " + requiredVote, message.guild);
-                eggLog("VOTES: " + songQue[workingQue][0].skipCount, message.guild);
+                eggLog(`[MUSIC] VOTES: ${songQue[workingQue][0].skipCount}/${requiredVote}`, message.guild);
                 // if the vote succeeds
                 if (songQue[workingQue][0].skipCount >= requiredVote) {
                     message.channel.send("Enough people have voted to skip the song. (" + songQue[workingQue][0].skipCount + "/" + requiredVote + ")");
