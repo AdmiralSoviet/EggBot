@@ -198,7 +198,6 @@ function EgSong(link, title) {
     this.alreadyVoted = [];
     // function to check if the user has already voted
     this.checkVoted = function (userID) {
-        eggLog("ALREADY VOTED: " + this.alreadyVoted);
         for (var i = 0; i < this.alreadyVoted.length; i++) {
             if (this.alreadyVoted[i] == userID) {
                 return true
@@ -228,7 +227,7 @@ function addToQue(song, message) {
         }
     } else {
         // if songque doesn't exist, create it
-        eggLog("Creating queue array!", message.guild)
+        eggLog("[MUSIC] Creating queue array!", message.guild)
         songQue[workingQue] = [song];
         json = JSON.stringify(songQue); //convert it back to json
         fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
@@ -297,7 +296,7 @@ function egPlay(voiceChannel, egSong, message) {
                 }, 5000)
             });
         });
-    eggLog("Joining channel", message.guild);
+    eggLog("[MUSIC] Joining channel", message.guild);
     message.channel.send('Now playing ' + egSong.title);
 }
 
@@ -310,7 +309,7 @@ function stoppedPlaying(voiceChannel, message) {
     fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
         if (err) throw err;
         if (queIsEmpty(message) == false) {
-            eggLog("Playing next song in queue...", message.guild)
+            eggLog("[MUSIC] Playing next song in queue...", message.guild)
             egPlay(voiceChannel, songQue[workingQue][0], message);
         } else {
             eggLog("Finished playing all songs in the queue!", message.guild);
