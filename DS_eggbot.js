@@ -13,14 +13,12 @@ var commands = require('./egg_data/commands');
 var songQue = require("./egg_data/songque");
 // define bot as object
 const client = new Discord.Client();
-var skipped = [];
 
 // youtube settings and API key
 var opts = config.youtube_options;
 
 // log to web
 var app = require('express')();
-var express = require('express');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 io.viewer_count = 0;
@@ -134,7 +132,7 @@ function Grammer(content) {
     }
 }
 // retrieve random question
-function randomQuestion(channel) {
+function randomQuestion() {
     eggLog("List of questions: [" + config.questions + "]");
     if (typeof config.questions != "undefined" && config.questions != null && config.questions.length > 0) {
         eggLog("Asking a question...");
@@ -145,20 +143,6 @@ function randomQuestion(channel) {
     return response
 }
 
-// check if server id is already in config.json
-function hasLoggedServer(message) {
-    var haslogged = false;
-
-    for (var property in server_count) {
-        if (server_count.hasOwnProperty(property)) {
-            if (server_count[property].id == message.guild.id) {
-                haslogged = true
-            }
-        }
-    }
-
-    return haslogged
-}
 // generate random alpha-numeric string
 function genString(length) {
     const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -210,7 +194,7 @@ function EgSong(link, title) {
 function addToQue(song, message) {
     var server = message.guild;
     // define the server's music que
-    var workingQue = "eg_" + server.id;
+    const workingQue = "eg_" + server.id;
     // make sure the queue exists in songue.json
     if (songQue[workingQue]) {
         // make sure que doesn't have too many items for the !eg_queue command
@@ -239,7 +223,7 @@ function addToQue(song, message) {
 // check if current que is empty or not
 function queIsEmpty(message) {
     var server = message.guild;
-    var workingQue = "eg_" + server.id;
+    const workingQue = "eg_" + server.id;
     if (songQue[workingQue]) {
         if (songQue[workingQue].length == 0) {
             return true // songque is empty
@@ -260,7 +244,7 @@ function queIsEmpty(message) {
 
 function clearQue(message) {
     var server = message.guild;
-    var workingQue = "eg_" + server.id;
+    const workingQue = "eg_" + server.id;
     songQue[workingQue] = [];
     json = JSON.stringify(songQue); //convert it back to json
     fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
@@ -270,71 +254,53 @@ function clearQue(message) {
 }
 
 function egPlay(voiceChannel, egSong, message) {
-    var workingQue = "eg_" + message.guild.id;
-    var broadcast = client.createVoiceBroadcast();
-    voiceChannel.join()
-        .then(connection => {
-            // use the link of the first result
-            let stream = ytdl(egSong.link, {
-                // only stream audio channels
-                filter: 'audioonly',
-            });
-            broadcast.playStream(stream);
-            const dispatcher = connection.playBroadcast(broadcast);
-            broadcast.on('end', () => {
-                setTimeout(function () {
-                    // make sure the song that 'ended' hasn't been skipped
-                    for (var i = 0; i < skipped.length; i++) {
-                        if (skipped[i] == egSong.link + message.guild.id) {
-                            eggLog("[MUSIC] Tried to play next song but the current one is still playing!");
-                            skipped.splice(i, 1);
-                            return
-                        }
-                    }
-                    // play next video
-                    stoppedPlaying(voiceChannel, message);
-                }, 5000)
-            });
-        });
+    if (!voiceChannel.connection) {
+        voiceChannel.join();
+    }
+    let stream = ytdl(egSong.link, {
+        filter: 'audioonly',
+    });
+    const dispatcher = voiceChannel.connection.playStream(stream);
+    dispatcher.on('debug', info => {
+        eggLog(`[MUSIC] ${info}`, message.guild);
+    });
+    dispatcher.on('end', () => {
+        // play next video
+        stoppedPlaying(voiceChannel, message);
+    });
     eggLog("[MUSIC] Joining channel", message.guild);
     message.channel.send('Now playing ' + egSong.title);
 }
 
 // play next song
 function stoppedPlaying(voiceChannel, message) {
-    var workingQue = "eg_" + message.guild.id;
+    const workingQue = "eg_" + message.guild.id;
     songQue[workingQue].splice(0, 1);
+    if (!queIsEmpty(message)) {
+        eggLog("[MUSIC] Playing next song in queue...", message.guild)
+        egPlay(voiceChannel, songQue[workingQue][0], message);
+    } else {
+        eggLog("[MUSIC] Finished playing all songs in the queue!", message.guild);
+        message.channel.send("Finished playing all songs in the queue.")
+        voiceChannel.leave();
+    }
     json = JSON.stringify(songQue); //convert it back to json
     // write it back
     fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
         if (err) throw err;
-        if (queIsEmpty(message) == false) {
-            eggLog("[MUSIC] Playing next song in queue...", message.guild)
-            egPlay(voiceChannel, songQue[workingQue][0], message);
-        } else {
-            eggLog("[MUSIC] Finished playing all songs in the queue!", message.guild);
-            message.channel.send("Finished playing all songs in the queue.")
-            voiceChannel.leave();
-        }
+
     });
-}
-// add to list to make sure the bot doesn't try to skip a song that is currently playing
-function addToBlacklist(link, message) {
-    var skip = link + message.guild.id;
-    skipped.push(skip);
 }
 // Skip Function
 function skipSong(message) {
-    var workingQue = "eg_" + message.guild.id;
+    const workingQue = "eg_" + message.guild.id;
     if (songQue[workingQue][0]) {
-        addToBlacklist(songQue[workingQue][0].link, message);
-
         const voiceChannel = message.member.voiceChannel;
         // if user not in voice channel
         if (!voiceChannel) {
             return message.reply('Please be in a voice channel first!');
         }
-        stoppedPlaying(voiceChannel, message);
+        voiceChannel.connection.dispatcher.end();
     } else {
         return message.reply("Nothing to skip!");
     }
@@ -465,7 +431,7 @@ client.on('message', message => {
         }
         // roll command
         if (secarg[0] == '!eg_roll' && secarg[1]) {
-            var loadMessage = message.channel.send("Rolling " + secarg[1] + "...");
+            message.channel.send("Rolling " + secarg[1] + "...");
             var roll = rollf(secarg[1]);
             var embed = new Discord.RichEmbed();
             embed.setTitle("Result of Rolling " + secarg[1] + "!");
@@ -532,10 +498,8 @@ client.on('message', message => {
         // ask a question sourced from user questions
         if (message.content == "!eg_askme") {
             message.channel.send("Hm. Let me think...");
-            var question = randomQuestion(message.channel);
+            var question = randomQuestion();
             message.channel.send(question);
-            // capture next response to be stored as a possible answer for that question when asked
-            // captureResponse(message, question);
         }
 
         /*
@@ -666,7 +630,7 @@ client.on('message', message => {
                 seek: 0,
                 volume: 1
             };
-            var workingQue = "eg_" + message.guild.id;
+            const workingQue = "eg_" + message.guild.id;
             // if link is detected run this
             if (realarg[1].includes("https://www.youtube.com/watch?v=")) {
                 ytdl.getInfo(realarg[1], function (err, info) {
@@ -694,7 +658,7 @@ client.on('message', message => {
                 return message.channel.send("This command must be sent in a guild!");
             }
             if (!queIsEmpty(message)) {
-                var workingQue = "eg_" + message.guild.id;
+                const workingQue = "eg_" + message.guild.id;
                 var embed = new Discord.RichEmbed();
                 embed.setTitle("Song Queue 🎺");
                 embed.setColor("PURPLE");
@@ -720,7 +684,7 @@ client.on('message', message => {
             if (!message.guild || !message.member) {
                 return message.channel.send("This command must be sent in a server!");
             }
-            var workingQue = "eg_" + message.guild.id;
+            const workingQue = "eg_" + message.guild.id;
             const voiceChannel = message.member.voiceChannel;
             // if user not in voice channel
             if (!voiceChannel) {
@@ -758,12 +722,7 @@ client.on('message', message => {
             if (!voiceChannel) {
                 return message.reply('Please be in a voice channel first!');
             }
-            // options for video
-            const streamOptions = {
-                seek: 0,
-                volume: 1
-            };
-            var workingQue = "eg_" + message.guild.id;
+            const workingQue = "eg_" + message.guild.id;
             if (songQue[workingQue]) {
                 if (songQue[workingQue].length != 0) {
                     eggLog("[MUSIC] Forcing song.", message.guild)
@@ -781,17 +740,13 @@ client.on('message', message => {
                 return message.channel.send("This command must be sent in a server!");
             }
             const voiceChannel = message.member.voiceChannel;
-            var workingQue = "eg_" + message.guild.id;
             if (!voiceChannel) {
                 return message.reply('Please be in a voice channel first!');
             }
             message.channel.send("Stopping stream...");
             eggLog("[MUSIC] Leaving channel.", message.guild)
-            voiceChannel.leave();
-            if (queIsEmpty(message) == false) {
-                addToBlacklist(songQue[workingQue][0].link, message);
-            }
             clearQue(message);
+            voiceChannel.leave();
         }
         // search and pick at random from the list of results
         if (secarg[0] == "!eg_random" && contentsaid) {
@@ -799,16 +754,11 @@ client.on('message', message => {
                 return message.channel.send("This command must be sent in a server!");
             }
             const voiceChannel = message.member.voiceChannel;
-            var workingQue = "eg_" + message.guild.id;
+            const workingQue = "eg_" + message.guild.id;
             // if user not in voice channel
             if (!voiceChannel) {
                 return message.reply('Please be in a voice channel first!');
             }
-            // options for video
-            const streamOptions = {
-                seek: 0,
-                volume: 1
-            };
             // search for the song on youtube
             yousearch(contentsaid, opts, function (err, results) {
                 if (err) return eggLog(err);
