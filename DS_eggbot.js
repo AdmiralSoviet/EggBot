@@ -254,22 +254,22 @@ function clearQue(message) {
 }
 
 function egPlay(voiceChannel, egSong, message) {
-    if (!voiceChannel.connection) {
-        voiceChannel.join();
-    }
-    let stream = ytdl(egSong.link, {
-        filter: 'audioonly',
-    });
-    const dispatcher = voiceChannel.connection.playStream(stream);
-    dispatcher.on('debug', info => {
-        eggLog(`[MUSIC] ${info}`, message.guild);
-    });
-    dispatcher.on('end', () => {
-        // play next video
-        stoppedPlaying(voiceChannel, message);
-    });
-    eggLog("[MUSIC] Joining channel", message.guild);
-    message.channel.send('Now playing ' + egSong.title);
+    voiceChannel.join()
+        .then(connection => {
+            let stream = ytdl(egSong.link, {
+                filter: 'audioonly',
+            });
+            const dispatcher = connection.playStream(stream);
+            dispatcher.on('debug', info => {
+                eggLog(`[MUSIC] ${info}`, message.guild);
+            });
+            dispatcher.on('end', () => {
+                // play next video
+                stoppedPlaying(voiceChannel, message);
+            });
+            eggLog("[MUSIC] Joining channel", message.guild);
+            message.channel.send('Now playing ' + egSong.title);
+        });
 }
 
 // play next song
