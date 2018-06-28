@@ -258,6 +258,7 @@ function egPlay(voiceChannel, egSong, message) {
         .then(connection => {
             let stream = ytdl(egSong.link, {
                 filter: 'audioonly',
+                quality: 'highestaudio'
             });
             const dispatcher = connection.playStream(stream);
             dispatcher.on('debug', info => {
@@ -625,17 +626,15 @@ client.on('message', message => {
             if (!voiceChannel) {
                 return message.reply('Please be in a voice channel first!');
             }
-            // options for video
-            const streamOptions = {
-                seek: 0,
-                volume: 1
-            };
             const workingQue = "eg_" + message.guild.id;
             // if link is detected run this
-            if (realarg[1].includes("https://www.youtube.com/watch?v=")) {
+            if (ytdl.validateURL(secarg[1])) {
                 ytdl.getInfo(realarg[1], function (err, info) {
+                    if (err) {
+                        eggLog(`[MUSIC] ${err}`, message.guild);
+                        return message.channel.send(err);
+                    }
                     addToQue(new EgSong(realarg[1], info.title), message);
-                    // addToQue(realarg[1], message, info.title);
                     if (realarg[1] == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
                         egPlay(voiceChannel, songQue[workingQue][0], message);
                     }
@@ -725,7 +724,7 @@ client.on('message', message => {
             const workingQue = "eg_" + message.guild.id;
             if (songQue[workingQue]) {
                 if (songQue[workingQue].length != 0) {
-                    eggLog("[MUSIC] Forcing song.", message.guild)
+                    eggLog("[MUSIC] Forcing song.", message.guild);
                     egPlay(voiceChannel, songQue[workingQue][0], message);
                 }
             } else {
