@@ -24,6 +24,16 @@
         "section": "general",
         "description": "Prints a list of information about Egg-Bot, including ways to contribute to Egg-Bot's development."
     },
+    "quote": {
+        "name": "!eg_quote",
+        "section": "general",
+        "description": "Spits out a random quote added through the !eg_addquote command."
+    },
+    "addquote": {
+        "name": "!eg_addquote <content>",
+        "section": "general",
+        "description": "Adds quote to the list of quotes to be displayed with the !eg_quote command."
+    },
     "roll": {
         "name": "!eg_roll <2d10>",
         "section": "general",
