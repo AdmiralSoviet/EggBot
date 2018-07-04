@@ -257,13 +257,9 @@ function egPlay(voiceChannel, egSong, message) {
     voiceChannel.join()
         .then(connection => {
             let stream = ytdl(egSong.link, {
-                filter: 'audioonly',
-                quality: 'highestaudio'
+                filter: 'audioonly'
             });
             const dispatcher = connection.playStream(stream);
-            dispatcher.on('debug', info => {
-                eggLog(`[MUSIC] ${info}`, message.guild);
-            });
             dispatcher.on('end', () => {
                 // play next video
                 stoppedPlaying(voiceChannel, message);
@@ -501,6 +497,30 @@ client.on('message', message => {
             message.channel.send("Hm. Let me think...");
             var question = randomQuestion();
             message.channel.send(question);
+        }
+        if (secarg[0] == "!eg_addquote" && secarg[1]) {
+            let quote = {
+                author: message.author.username,
+                content: contentsaid,
+                date: new Date().toDateString()
+            };
+            config.quotes.push(quote);
+            json = JSON.stringify(config, null, 4); //convert it back to json
+            fs.writeFile(__dirname + '/egg_data/config.json', json, 'utf8'); // write it back
+            message.reply("Quote added!");
+        }
+        if (secarg[0] == "!eg_quote") {
+            if (!config.quotes.length > 0) {
+                message.channel.send("No quotes exist! Try adding some.");
+                return false
+            }
+            let quote = config.quotes[Math.floor(Math.random() * config.quotes.length)];
+            let embed = new Discord.RichEmbed()
+                .setTitle("Random Quote")
+                .setColor("RANDOM")
+                .setDescription(quote.content)
+                .setFooter(`Submitted: ${quote.date}`);
+            message.channel.send(embed);
         }
 
         /*
@@ -780,7 +800,7 @@ client.on('message', message => {
         if (secarg[0] == "!eg_coclear" && devOnlyPermission(message.author) && secarg[1]) {
             if (secarg[1] == "questions") {
                 config.questions = [];
-                json = JSON.stringify(config); //convert it back to json
+                json = JSON.stringify(config, null, 4); //convert it back to json
                 fs.writeFile(__dirname + '/egg_data/config.json', json, 'utf8'); // write it back
                 message.reply("Questions cleared!");
             } else if (secarg[1] == "servers") {
@@ -788,6 +808,11 @@ client.on('message', message => {
                 json = JSON.stringify(server_count); //convert it back to json
                 fs.writeFile(__dirname + '/egg_data/server_count.json', json, 'utf8'); // write it back
                 message.reply("Servers cleared!");
+            } else if (secarg[1] == "quotes") {
+                config.quotes = [];
+                json = JSON.stringify(config, null, 4); //convert it back to json
+                fs.writeFile(__dirname + '/egg_data/config.json', json, 'utf8'); // write it back
+                message.reply("Quotes cleared!");
             } else {
                 message.reply("Invalid argument!");
             }
