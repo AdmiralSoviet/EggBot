@@ -34,7 +34,6 @@ function eggLog(content, server) {
     }
     fs.appendFile(__dirname + '/egg_data/logs/egglog.log', content + "\n", (err) => {
         if (err) throw err;
-        console.log(content);
     });
     io.emit('egglog-entry', content);
 }
@@ -254,12 +253,16 @@ function clearQue(message) {
 }
 
 function egPlay(voiceChannel, egSong, message) {
+    const streamOptions = {
+        seek: 0,
+        volume: 0.5
+    };
     voiceChannel.join()
         .then(connection => {
             let stream = ytdl(egSong.link, {
                 filter: 'audioonly'
             });
-            const dispatcher = connection.playStream(stream);
+            const dispatcher = connection.playStream(stream, streamOptions);
             dispatcher.on('end', () => {
                 // play next video
                 stoppedPlaying(voiceChannel, message);
@@ -285,7 +288,6 @@ function stoppedPlaying(voiceChannel, message) {
     // write it back
     fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
         if (err) throw err;
-
     });
 }
 // Skip Function
@@ -652,7 +654,7 @@ client.on('message', message => {
                 ytdl.getInfo(realarg[1], function (err, info) {
                     if (err) {
                         eggLog(`[MUSIC] ${err}`, message.guild);
-                        return message.channel.send(err);
+                        return message.channel.send("Could not add song (No result found).");
                     }
                     addToQue(new EgSong(realarg[1], info.title), message);
                     if (realarg[1] == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
@@ -662,7 +664,10 @@ client.on('message', message => {
             } else {
                 // search for the song on youtube
                 yousearch(contentsaid, opts, function (err, results) {
-                    if (err) return eggLog(err);
+                    if (err) {
+                        eggLog(`[MUSIC] ${err}`, message.guild);
+                        return message.channel.send("Could not add song (No result found).");
+                    }
                     var link = results[0].link;
                     addToQue(new EgSong(link, results[0].title), message);
                     if (link == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
@@ -780,7 +785,7 @@ client.on('message', message => {
             }
             // search for the song on youtube
             yousearch(contentsaid, opts, function (err, results) {
-                if (err) return eggLog(err);
+                if (err) throw err;
                 // pick a random video from results
                 var randomLink = results[Math.floor(Math.random() * results.length)];
                 var link = randomLink.link;
