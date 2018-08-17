@@ -15,3 +15,7 @@ If you want to test out the bot, go ahead and add the bot using this invite link
 # DISCORD
 Got something to say, bugs to report, just want to say hi?
 https://discord.gg/yyBm7qb
+
+# WEBSITE
+You can view the website here:
+http://gnomed.me/EggBot/
