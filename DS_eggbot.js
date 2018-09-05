@@ -36,6 +36,7 @@ function eggLog(content, server) {
         if (err) throw err;
     });
     io.emit('egglog-entry', content);
+    console.log(content);
 }
 
 app.get('/', function (req, res) {
@@ -177,8 +178,15 @@ function getWikihow() {
 function EgSong(link, title) {
     this.link = link;
     this.title = title;
+    const egOut = this;
+    ytdl.getInfo(link, (__, info) => {
+        egOut.title = info.title;
+        egOut.author = info.author.name;
+        egOut.length_minutes = (info.length_seconds / 60).toFixed(2);
+    });
     this.skipCount = 0;
     this.alreadyVoted = [];
+
     // function to check if the user has already voted
     this.checkVoted = function (userID) {
         for (var i = 0; i < this.alreadyVoted.length; i++) {
@@ -306,6 +314,7 @@ function skipSong(message) {
 }
 
 function populateServerList(guilds, callback) {
+    server_count = {};
     guilds = guilds.array();
     for (var i = 0; i < guilds.length; i++) {
         server_count[guilds[i].id] = {};
@@ -651,24 +660,18 @@ client.on('message', message => {
             const workingQue = "eg_" + message.guild.id;
             // if link is detected run this
             if (ytdl.validateURL(secarg[1])) {
-                ytdl.getInfo(realarg[1], function (err, info) {
-                    if (err) {
-                        eggLog(`[MUSIC] ${err}`, message.guild);
-                        return message.channel.send("Could not add song (No result found).");
-                    }
-                    addToQue(new EgSong(realarg[1], info.title), message);
-                    if (realarg[1] == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
-                        egPlay(voiceChannel, songQue[workingQue][0], message);
-                    }
-                });
+                addToQue(new EgSong(realarg[1]), message);
+                if (realarg[1] == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
+                    egPlay(voiceChannel, songQue[workingQue][0], message);
+                }
             } else {
                 // search for the song on youtube
                 yousearch(contentsaid, opts, function (err, results) {
                     if (err) {
                         eggLog(`[MUSIC] ${err}`, message.guild);
-                        return message.channel.send("Could not add song (No result found).");
+                        return message.channel.send(`Could not add song (${err}).`);
                     }
-                    var link = results[0].link;
+                    const link = results[0].link;
                     addToQue(new EgSong(link, results[0].title), message);
                     if (link == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
                         egPlay(voiceChannel, songQue[workingQue][0], message);
@@ -689,7 +692,7 @@ client.on('message', message => {
                 embed.setThumbnail(client.user.avatarURL);
                 embed.setDescription("This is the current song queue for this guild.");
                 for (var i = 0; i < songQue[workingQue].length; i++) {
-                    embed.addField((i + 1) + ". " + songQue[workingQue][i].title, songQue[workingQue][i].link);
+                    embed.addField((i + 1) + ". " + songQue[workingQue][i].title, `Uploaded By: ${songQue[workingQue][i].author}\nLength: ${songQue[workingQue][i].length_minutes} Minutes\nLink: ${songQue[workingQue][i].link}`);
                 }
                 embed.setTimestamp();
                 message.channel.send(embed);
@@ -787,8 +790,8 @@ client.on('message', message => {
             yousearch(contentsaid, opts, function (err, results) {
                 if (err) throw err;
                 // pick a random video from results
-                var randomLink = results[Math.floor(Math.random() * results.length)];
-                var link = randomLink.link;
+                const randomLink = results[Math.floor(Math.random() * results.length)];
+                const link = randomLink.link;
                 addToQue(new EgSong(link, randomLink.title), message);
                 if (link == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
                     egPlay(voiceChannel, songQue[workingQue][0], message);
