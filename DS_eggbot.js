@@ -182,7 +182,7 @@ function EgSong(link, title) {
     ytdl.getInfo(link, (__, info) => {
         egOut.title = info.title;
         egOut.author = info.author.name;
-        egOut.length_minutes = (info.length_seconds / 60).toFixed(2);
+        egOut.length_minutes = String((info.length_seconds / 60).toFixed(2)).replace(".", ":");
     });
     this.skipCount = 0;
     this.alreadyVoted = [];
