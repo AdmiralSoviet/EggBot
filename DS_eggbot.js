@@ -182,7 +182,7 @@ function EgSong(link, title) {
     ytdl.getInfo(link, (__, info) => {
         egOut.title = info.title;
         egOut.author = info.author.name;
-        egOut.length_minutes = String((info.length_seconds / 60).toFixed(2)).replace(".", ":");
+        egOut.length_minutes = (info.length_seconds / 60).toFixed(2);
     });
     this.skipCount = 0;
     this.alreadyVoted = [];
@@ -431,7 +431,7 @@ client.on('message', message => {
             embed.setTitle(client.user.username + " Stats");
             embed.setThumbnail(client.user.avatarURL);
             embed.addField("Uptime: ", ((client.uptime / 1000) / 60).toFixed(2) + " minute(s)");
-            embed.addField("Free System Memory (mb): ", (os.freemem() / 1000000).toFixed(2) + "/" + (os.totalmem() / 1000000).toFixed(2) + " (" + ((os.freemem() / os.totalmem()) * 100).toFixed(2) + "%)");
+            // embed.addField("Free System Memory (mb): ", (os.freemem() / 1000000).toFixed(2) + "/" + (os.totalmem() / 1000000).toFixed(2) + " (" + ((os.freemem() / os.totalmem()) * 100).toFixed(2) + "%)");
             embed.addField("Servers Running: ", client.guilds.array().length);
             embed.setTimestamp();
             eggLog("User '" + message.author.username + "' has requested stats.", message.guild);
