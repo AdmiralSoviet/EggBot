@@ -9,8 +9,8 @@ var config = require('./egg_data/config');
 var server_count = require('./egg_data/server_count');
 // retrieve commands.json
 var commands = require('./egg_data/commands');
-// retrieve songque.json
-var songQue = require("./egg_data/songque");
+
+let egGuild = require("./egg_data/eg_guild");
 // define bot as object
 const client = new Discord.Client();
 
@@ -133,10 +133,10 @@ function Grammer(content) {
 }
 // retrieve random question
 function randomQuestion() {
-    eggLog("List of questions: [" + config.questions + "]");
-    if (typeof config.questions != "undefined" && config.questions != null && config.questions.length > 0) {
+    eggLog("List of questions: [" + egGuild.questions + "]");
+    if (typeof egGuild.questions != "undefined" && egGuild.questions != null && egGuild.questions.length > 0) {
         eggLog("Asking a question...");
-        response = config.questions[Math.floor(Math.random() * config.questions.length)];
+        response = egGuild.questions[Math.floor(Math.random() * egGuild.questions.length)];
     } else {
         response = "Can't think of any right now... Try asking me some!";
     }
@@ -199,62 +199,53 @@ function EgSong(link, title) {
 }
 
 function addToQue(song, message) {
-    var server = message.guild;
-    // define the server's music que
-    const workingQue = "eg_" + server.id;
+    if (!egGuild.guilds[message.guild.id]) {
+        egGuild.guilds[message.guild.id] = {};
+        eggLog("[MUSIC] Creating queue array!", message.guild);
+        egGuild.guilds[message.guild.id].songs = [];
+        const json = JSON.stringify(egGuild); //convert it back to json
+        fs.writeFile(__dirname + '/egg_data/eg_guild.json', json, 'utf8', (err) => {
+            if (err) throw err;
+        });
+    }
     // make sure the queue exists in songue.json
-    if (songQue[workingQue]) {
+    if (egGuild.guilds[message.guild.id].songs) {
         // make sure que doesn't have too many items for the !eg_queue command
-        if (songQue[workingQue].length < 15) {
-            songQue[workingQue].push(song); // add the song to the que
-            json = JSON.stringify(songQue); //convert it back to json
-            fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
-                if (err) throw err;
-                eggLog("Link has been logged!", message.guild)
+        if (egGuild.guilds[message.guild.id].songs.length < 15) {
+            egGuild.guilds[message.guild.id].songs.push(song); // add the song to the que
+            if (egGuild.guilds[message.guild.id].songs.length != 1) {
                 message.channel.send("'" + song.title + "' has been added to the queue!");
-            });
+            }
         } else {
             return message.reply("The queue is full! Wait for the queue to clear or use !eg_clear");
         }
-    } else {
-        // if songque doesn't exist, create it
-        eggLog("[MUSIC] Creating queue array!", message.guild)
-        songQue[workingQue] = [song];
-        json = JSON.stringify(songQue); //convert it back to json
-        fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
-            if (err) throw err;
-        });
     }
 }
 
 // check if current que is empty or not
 function queIsEmpty(message) {
-    var server = message.guild;
-    const workingQue = "eg_" + server.id;
-    if (songQue[workingQue]) {
-        if (songQue[workingQue].length == 0) {
+    if (egGuild.guilds[message.guild.id]) {
+        if (songQue.length == 0) {
             return true // songque is empty
         } else {
             return false // it isn't empty
         }
     } else {
-        // if songque doesn't exist, create it
-        eggLog("[MUSIC] Creating queue array!", message.guild)
-        songQue[workingQue] = [];
-        json = JSON.stringify(songQue); //convert it back to json
-        fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
+        egGuild.guilds[message.guild.id] = {};
+        eggLog("[MUSIC] Creating queue array!", message.guild);
+        egGuild.guilds[message.guild.id].songs = [];
+        const json = JSON.stringify(egGuild); //convert it back to json
+        fs.writeFile(__dirname + '/egg_data/eg_guild.json', json, 'utf8', (err) => {
             if (err) throw err;
         });
-        return true
+        return true;
     }
 }
 
 function clearQue(message) {
-    var server = message.guild;
-    const workingQue = "eg_" + server.id;
-    songQue[workingQue] = [];
-    json = JSON.stringify(songQue); //convert it back to json
-    fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
+    egGuild.guilds[message.guild.id].songs = [];
+    const json = JSON.stringify(egGuild); //convert it back to json
+    fs.writeFile(__dirname + '/egg_data/eg_guild.json', json, 'utf8', (err) => {
         if (err) throw err;
         message.channel.send("Queue cleared!");
     });
@@ -282,26 +273,25 @@ function egPlay(voiceChannel, egSong, message) {
 
 // play next song
 function stoppedPlaying(voiceChannel, message) {
-    const workingQue = "eg_" + message.guild.id;
-    songQue[workingQue].splice(0, 1);
+    egGuild.guilds[message.guild.id].songs.splice(0, 1);
     if (!queIsEmpty(message)) {
         eggLog("[MUSIC] Playing next song in queue...", message.guild)
-        egPlay(voiceChannel, songQue[workingQue][0], message);
+        egPlay(voiceChannel, egGuild.guilds[message.guild.id].songs[0], message);
     } else {
         eggLog("[MUSIC] Finished playing all songs in the queue!", message.guild);
         message.channel.send("Finished playing all songs in the queue.")
         voiceChannel.leave();
     }
-    json = JSON.stringify(songQue); //convert it back to json
+    const json = JSON.stringify(egGuild); //convert it back to json
     // write it back
-    fs.writeFile(__dirname + '/egg_data/songque.json', json, 'utf8', (err) => {
+    fs.writeFile(__dirname + '/egg_data/eg_guild.json', json, 'utf8', (err) => {
         if (err) throw err;
     });
 }
 // Skip Function
 function skipSong(message) {
-    const workingQue = "eg_" + message.guild.id;
-    if (songQue[workingQue][0]) {
+
+    if (egGuild.guilds[message.guild.id].songs[0]) {
         const voiceChannel = message.member.voiceChannel;
         // if user not in voice channel
         if (!voiceChannel) {
@@ -325,7 +315,7 @@ function populateServerList(guilds, callback) {
         server_count[guilds[i].id].memberCount = guilds[i].memberCount;
         server_count[guilds[i].id].iconURL = guilds[i].iconURL;
     }
-    json = JSON.stringify(server_count, null, 4); //convert it back to json
+    const json = JSON.stringify(server_count, null, 4); //convert it back to json
     fs.writeFile(__dirname + '/egg_data/server_count.json', json, 'utf8'); // write it back
     callback();
 }
@@ -472,9 +462,9 @@ client.on('message', message => {
                 if (!contentsaid.includes("@")) {
                     if (contentsaid != "?") {
                         eggLog("Learning '" + contentsaid + "' for later.");
-                        config.questions.push(Grammer(contentsaid)); //add some data
-                        json = JSON.stringify(config, null, 4); //convert it back to json
-                        fs.writeFile(__dirname + '/egg_data/config.json', json, 'utf8'); // write it back
+                        egGuild.questions.push(Grammer(contentsaid)); //add some data
+                        const json = JSON.stringify(egGuild, null, 4); //convert it back to json
+                        fs.writeFile(__dirname + '/egg_data/eg_guild.json', json, 'utf8'); // write it back
                     }
                 };
                 // response area
@@ -498,8 +488,8 @@ client.on('message', message => {
             } else if (contentsaid.toLowerCase().includes("thank")) {
                 message.reply("No problem.");
             } else {
-                var ranResponse = config.responses;
-                var chooseResponse = ranResponse[Math.floor(Math.random() * ranResponse.length)];
+                const ranResponse = egGuild.responses;
+                const chooseResponse = ranResponse[Math.floor(Math.random() * ranResponse.length)];
                 message.reply(chooseResponse);
             }
         }
@@ -515,17 +505,17 @@ client.on('message', message => {
                 content: contentsaid,
                 date: new Date().toDateString()
             };
-            config.quotes.push(quote);
-            json = JSON.stringify(config, null, 4); //convert it back to json
-            fs.writeFile(__dirname + '/egg_data/config.json', json, 'utf8'); // write it back
+            egGuild.quotes.push(quote);
+            const json = JSON.stringify(egGuild, null, 4); //convert it back to json
+            fs.writeFile(__dirname + '/egg_data/eg_guild.json', json, 'utf8'); // write it back
             message.reply("Quote added!");
         }
         if (secarg[0] == "!eg_quote") {
-            if (!config.quotes.length > 0) {
+            if (!egGuild.quotes.length > 0) {
                 message.channel.send("No quotes exist! Try adding some.");
                 return false
             }
-            let quote = config.quotes[Math.floor(Math.random() * config.quotes.length)];
+            let quote = egGuild.quotes[Math.floor(Math.random() * egGuild.quotes.length)];
             let embed = new Discord.RichEmbed()
                 .setTitle("Random Quote")
                 .setColor("RANDOM")
@@ -657,12 +647,11 @@ client.on('message', message => {
             if (!voiceChannel) {
                 return message.reply('Please be in a voice channel first!');
             }
-            const workingQue = "eg_" + message.guild.id;
             // if link is detected run this
             if (ytdl.validateURL(secarg[1])) {
                 addToQue(new EgSong(realarg[1]), message);
-                if (realarg[1] == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
-                    egPlay(voiceChannel, songQue[workingQue][0], message);
+                if (realarg[1] == egGuild.guilds[message.guild.id].songs[0].link && egGuild.guilds[message.guild.id].songs.length == 1) {
+                    egPlay(voiceChannel, egGuild.guilds[message.guild.id].songs[0], message);
                 }
             } else {
                 // search for the song on youtube
@@ -673,8 +662,8 @@ client.on('message', message => {
                     }
                     const link = results[0].link;
                     addToQue(new EgSong(link, results[0].title), message);
-                    if (link == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
-                        egPlay(voiceChannel, songQue[workingQue][0], message);
+                    if (link == egGuild.guilds[message.guild.id].songs[0].link && egGuild.guilds[message.guild.id].songs.length == 1) {
+                        egPlay(voiceChannel, egGuild.guilds[message.guild.id].songs[0], message);
                     }
                 });
             }
@@ -685,14 +674,15 @@ client.on('message', message => {
                 return message.channel.send("This command must be sent in a guild!");
             }
             if (!queIsEmpty(message)) {
-                const workingQue = "eg_" + message.guild.id;
+
+                let songQue = egGuild.guilds[message.guild.id].songs;
                 var embed = new Discord.RichEmbed();
                 embed.setTitle("Song Queue 🎺");
                 embed.setColor("PURPLE");
                 embed.setThumbnail(client.user.avatarURL);
                 embed.setDescription("This is the current song queue for this guild.");
-                for (var i = 0; i < songQue[workingQue].length; i++) {
-                    embed.addField((i + 1) + ". " + songQue[workingQue][i].title, `Uploaded By: ${songQue[workingQue][i].author}\nLength: ${songQue[workingQue][i].length_minutes} Minutes\nLink: ${songQue[workingQue][i].link}`);
+                for (var i = 0; i < songQue.length; i++) {
+                    embed.addField((i + 1) + ". " + songQue[i].title, `Uploaded By: ${songQue[i].author}\nLength: ${songQue[i].length_minutes} Minutes\nLink: ${songQue[i].link}`);
                 }
                 embed.setTimestamp();
                 message.channel.send(embed);
@@ -711,7 +701,6 @@ client.on('message', message => {
             if (!message.guild || !message.member) {
                 return message.channel.send("This command must be sent in a server!");
             }
-            const workingQue = "eg_" + message.guild.id;
             const voiceChannel = message.member.voiceChannel;
             // if user not in voice channel
             if (!voiceChannel) {
@@ -719,21 +708,21 @@ client.on('message', message => {
             }
             var countMembers = Array.from(voiceChannel.members.values()).length - 1; // subtract one to remove bot from vote
             // if the queue doesn't exist or queue is empty
-            if (!songQue[workingQue] || !songQue[workingQue][0]) {
+            if (!egGuild.guilds[message.guild.id].songs || !egGuild.guilds[message.guild.id].songs[0]) {
                 return message.reply("Nothing is playing!");
             }
-            if (!songQue[workingQue][0].checkVoted(message.author.id)) {
+            if (!egGuild.guilds[message.guild.id].songs[0].checkVoted(message.author.id)) {
                 var requiredVote = Math.round(countMembers * 0.6); // 60% of vote required
-                songQue[workingQue][0].skipCount += 1;
-                eggLog(`[MUSIC] VOTES: ${songQue[workingQue][0].skipCount}/${requiredVote}`, message.guild);
+                egGuild.guilds[message.guild.id].songs[0].skipCount += 1;
+                eggLog(`[MUSIC] VOTES: ${egGuild.guilds[message.guild.id].songs[0].skipCount}/${requiredVote}`, message.guild);
                 // if the vote succeeds
-                if (songQue[workingQue][0].skipCount >= requiredVote) {
-                    message.channel.send("Enough people have voted to skip the song. (" + songQue[workingQue][0].skipCount + "/" + requiredVote + ")");
+                if (egGuild.guilds[message.guild.id].songs[0].skipCount >= requiredVote) {
+                    message.channel.send("Enough people have voted to skip the song. (" + egGuild.guilds[message.guild.id].songs[0].skipCount + "/" + requiredVote + ")");
                     skipSong(message);
                 } else {
                     // if the vote count isn't enough to skip yet.
-                    songQue[workingQue][0].alreadyVoted.push(message.author.id);
-                    message.reply("Your vote has been lodged! (" + songQue[workingQue][0].skipCount + "/" + requiredVote + ")")
+                    egGuild.guilds[message.guild.id].songs[0].alreadyVoted.push(message.author.id);
+                    message.reply("Your vote has been lodged! (" + egGuild.guilds[message.guild.id].songs[0].skipCount + "/" + requiredVote + ")")
                 }
             } else {
                 message.reply("You have already voted!");
@@ -749,11 +738,10 @@ client.on('message', message => {
             if (!voiceChannel) {
                 return message.reply('Please be in a voice channel first!');
             }
-            const workingQue = "eg_" + message.guild.id;
-            if (songQue[workingQue]) {
-                if (songQue[workingQue].length != 0) {
+            if (egGuild.guilds[message.guild.id].songs) {
+                if (egGuild.guilds[message.guild.id].songs.length != 0) {
                     eggLog("[MUSIC] Forcing song.", message.guild);
-                    egPlay(voiceChannel, songQue[workingQue][0], message);
+                    egPlay(voiceChannel, egGuild.guilds[message.guild.id].songs[0], message);
                 }
             } else {
                 return message.reply("There is no queue! Try adding a song instead.");
@@ -781,7 +769,6 @@ client.on('message', message => {
                 return message.channel.send("This command must be sent in a server!");
             }
             const voiceChannel = message.member.voiceChannel;
-            const workingQue = "eg_" + message.guild.id;
             // if user not in voice channel
             if (!voiceChannel) {
                 return message.reply('Please be in a voice channel first!');
@@ -793,8 +780,9 @@ client.on('message', message => {
                 const randomLink = results[Math.floor(Math.random() * results.length)];
                 const link = randomLink.link;
                 addToQue(new EgSong(link, randomLink.title), message);
-                if (link == songQue[workingQue][0].link && songQue[workingQue].length == 1) {
-                    egPlay(voiceChannel, songQue[workingQue][0], message);
+
+                if (link == egGuild.guilds[message.guild.id].songs[0].link && egGuild.guilds[message.guild.id].songs.length == 1) {
+                    egPlay(voiceChannel, egGuild.guilds[message.guild.id].songs[0], message);
                 }
             });
         }
@@ -807,19 +795,19 @@ client.on('message', message => {
         */
         if (secarg[0] == "!eg_coclear" && devOnlyPermission(message.author) && secarg[1]) {
             if (secarg[1] == "questions") {
-                config.questions = [];
-                json = JSON.stringify(config, null, 4); //convert it back to json
-                fs.writeFile(__dirname + '/egg_data/config.json', json, 'utf8'); // write it back
+                egGuild.questions = [];
+                const json = JSON.stringify(egGuild, null, 4); //convert it back to json
+                fs.writeFile(__dirname + '/egg_data/eg_guild.json', json, 'utf8'); // write it back
                 message.reply("Questions cleared!");
             } else if (secarg[1] == "servers") {
                 server_count = {};
-                json = JSON.stringify(server_count); //convert it back to json
+                const json = JSON.stringify(server_count); //convert it back to json
                 fs.writeFile(__dirname + '/egg_data/server_count.json', json, 'utf8'); // write it back
                 message.reply("Servers cleared!");
             } else if (secarg[1] == "quotes") {
-                config.quotes = [];
-                json = JSON.stringify(config, null, 4); //convert it back to json
-                fs.writeFile(__dirname + '/egg_data/config.json', json, 'utf8'); // write it back
+                egGuild.quotes = [];
+                const json = JSON.stringify(egGuild, null, 4); //convert it back to json
+                fs.writeFile(__dirname + '/egg_data/eg_guild.json', json, 'utf8'); // write it back
                 message.reply("Quotes cleared!");
             } else {
                 message.reply("Invalid argument!");
