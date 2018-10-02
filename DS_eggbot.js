@@ -225,7 +225,7 @@ function addToQue(song, message) {
 // check if current que is empty or not
 function queIsEmpty(message) {
     if (egGuild.guilds[message.guild.id]) {
-        if (songQue.length == 0) {
+        if (egGuild.guilds[message.guild.id].songs.length == 0) {
             return true // songque is empty
         } else {
             return false // it isn't empty
