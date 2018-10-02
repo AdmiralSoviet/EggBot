@@ -6,9 +6,6 @@
         "login": "admin", 
         "password": "admin"
     },
-    "responses": [":eggplant:", ":egg:", ":robot:", ":heart:", "Wow."],
-    "questions": [],
-    "quotes": [],
     "youtube_options": {
         "maxResults": 10,
         "key": "",
