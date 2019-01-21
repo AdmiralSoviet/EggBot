@@ -1,0 +1,4 @@
+./egg_data/config.json
+./egg_data/eg_guild.json
+./egg_data/server_count.json
+./egg_data/logs/*.log

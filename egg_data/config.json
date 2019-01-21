@@ -4,11 +4,8 @@
     "port": 8080,
     "log_auth": {
         "login": "admin", 
-        "password": "admin"
+        "password": ""
     },
-    "responses": [":eggplant:", ":egg:", ":robot:", ":heart:", "Wow."],
-    "questions": [],
-    "quotes": [],
     "youtube_options": {
         "maxResults": 10,
         "key": "",
