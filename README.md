@@ -1,3 +1,5 @@
+## Disclaimer
+This project has currently been suspended in favour of a new discord bot I've been working on named purplebot. You can view that repo here: https://github.com/AdmiralSoviet/purplebot/
 # EggBot
 This is a Discord Bot I originally created for I.T in my last year of High School. It has many different commands geared towards music playing, moderation and entertainment. It also features an extensive logging system and even features a web driven backend for viewing logs so you can track the activity of your bot no matter your location.
 
